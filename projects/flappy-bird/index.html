@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Flappy Bird | 3kh0s</title>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+    <meta content="Echo | 3kh0s.github.io" name="author"/>
+    <meta content="play floppy bird. a remake of popular game flappy bird built in html/css/js" name="description"/>
+    <meta content="flappybird,flappy,bird,floppybird,floppy,html,html5,css,css3,js,javascript,jquery,github,nebez,briefkani,nebezb,open,source,opensource" name="keywords"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"/>
+    <!-- Open Graph tags -->
+    <meta content="Flappy Bird" property="og:title"/>
+    <meta content="play flappy bird. a remake of popular game flappy bird built in html/css/js" property="og:description"/>
+    <meta content="website" property="og:type"/>
+    <meta content="assets/thumb.png" property="og:image"/>
+    <meta content="Floppy Bird" property="og:site_name"/>
+
+    <!-- Style sheets -->
+    <link href="css/reset.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
+</head>
+<script src="/js/main.js" type="application/javascript"></script>
+<body>
+<div id="gamecontainer">
+    <div id="gamescreen">
+        <div class="animated" id="sky">
+            <div id="flyarea">
+                <div class="animated" id="ceiling"></div>
+                <!-- This is the flying and pipe area container -->
+                <div class="bird animated" id="player"></div>
+
+                <div id="bigscore"></div>
+
+                <div id="splash"></div>
+
+                <div id="scoreboard">
+                    <div id="medal"></div>
+                    <div id="currentscore"></div>
+                    <div id="highscore"></div>
+                    <div id="replay"><img alt="replay" src="assets/replay.png"></div>
+                </div>
+
+                <!-- Pipes go here! -->
+            </div>
+        </div>
+        <div class="animated" id="land">
+            <div id="debug"></div>
+        </div>
+    </div>
+</div>
+<div id="footer">
+    <a href="https://www.dotgears.com/">original game/concept/art by dong nguyen</a>
+    <a href="https://3kh0s.github.io/">recreated by 3kh0</a>
+</div>
+<div class="boundingbox" id="playerbox"></div>
+<div class="boundingbox" id="pipebox"></div>
+
+<script src="js/jquery.min.js"></script>
+<script src="js/jquery.transit.min.js"></script>
+<script src="js/buzz.min.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>

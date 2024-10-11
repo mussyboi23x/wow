@@ -1,0 +1,35 @@
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <title>Tunnel Rush | 3kh0s</title>
+    <link href="style/style.css" rel="stylesheet">
+    <script src="UnityLoader.js"></script>
+    <script src="UnityProgress.js"></script>
+    <link href="img/tunnel.jpg" rel="icon">
+    <script>
+        var gameInstance = UnityLoader.instantiate("gameContainer", "build.json", {
+            onProgress: UnityProgress, Module: {
+                onRuntimeInitialized: function () {
+                    UnityProgress(gameInstance, "complete")
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+<!-- BY ECHO!!! DO NOT REMOVE THIS COMMENT THE GAME WILL BREAK!!!
+
+https://3kh0s.github.io/
+-->
+<div class="webgl-content">
+    <div id="gameContainer" style="width: 100%; height: 95%; margin: auto;"></div>
+    <div class="footer">
+        <div class="webgl-logo"></div>
+        <div class="fullscreen" onclick="gameInstance.SetFullscreen(1)"></div>
+        <div class="title">Tunnel Rush</div>
+    </div>
+</div>
+<script src="/js/main.js" type="application/javascript"></script>
+</body>
+</html>
