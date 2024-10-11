@@ -1,0 +1,353 @@
+<!doctype html>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+
+<title>Virtual x86 (debug)</title>
+<meta content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no" name="viewport">
+
+<script>
+    "use strict";
+
+    var CORE_FILES =
+        "const.js config.js log.js lib.js buffer.js cpu.js debug.js " +
+        "io.js main.js ide.js pci.js floppy.js " +
+        "memory.js dma.js pit.js vga.js ps2.js rtc.js uart.js acpi.js apic.js ioapic.js sb16.js " +
+        "ne2k.js state.js virtio.js virtio_console.js bus.js elf.js kernel.js";
+
+    var BROWSER_FILES = "main.js screen.js keyboard.js mouse.js speaker.js serial.js network.js starter.js worker_bus.js print_stats.js filestorage.js";
+    var LIB_FILES = "";
+
+    // jor1k stuff
+    LIB_FILES += " jor1k.js 9p.js filesystem.js marshall.js utf8.js";
+
+    var BUILD_FILES = "capstone-x86.min.js libwabt.js";
+
+    var to_load = [];
+
+    load_scripts(CORE_FILES, "src/");
+    load_scripts(BROWSER_FILES, "src/browser/");
+    load_scripts(LIB_FILES, "lib/");
+    load_scripts(BUILD_FILES, "build/");
+
+    function load_scripts(resp, path) {
+        var files = resp.split(" ");
+
+        for (var i = 0; i < files.length; i++) {
+            if (!files[i]) {
+                continue;
+            }
+
+            to_load.push(path + files[i]);
+        }
+    }
+
+    load_next();
+
+    function load_next() {
+        let s = to_load.shift();
+
+        if (!s) {
+            return;
+        }
+
+        var script = document.createElement("script");
+        script.src = s;
+        script.onload = load_next;
+        script.onerror = function () {
+            console.warn("trying to ignore script " + s + ", which failed to load");
+
+            load_next();
+        };
+        document.head.appendChild(script);
+    }
+</script>
+<link href="v86.css" rel="stylesheet">
+
+<div>
+    <div id="boot_options">
+        <h4>Debugger</h4>
+        <input id="start_reactos" type="button" value="ReactOS">
+        <input id="start_reactos-boot" type="button" value="ReactOS (boot)">
+        <input id="start_hirens" type="button" value="Hiren's Boot CD">
+        <br>
+
+        <input id="start_msdos" type="button" value="MS-DOS">
+        <input id="start_freedos" type="button" value="FreeDOS">
+        <input id="start_freegem" type="button" value="FreeDOS with FreeGEM">
+        <br>
+
+        <input id="start_windows1" type="button" value="Windows 1.01">
+        <input id="start_windows30" type="button" value="Windows 3.0">
+        <input id="start_windows31" type="button" value="Windows 3.1">
+        <input id="start_windows95" type="button" value="Windows 95">
+        <input id="start_windows95-boot" type="button" value="Windows 95 (boot)">
+        <br>
+        <input id="start_windows98" type="button" value="Windows 98">
+        <input id="start_windows98-boot" type="button" value="Windows 98 (boot)">
+        <input id="start_windowsnt3" type="button" value="Windows NT 3.1">
+        <input id="start_windowsnt4" type="button" value="Windows NT 4.0">
+        <input id="start_windows2000" type="button" value="Windows 2000">
+        <input id="start_windows2000-boot" type="button" value="Windows 2000 (boot)">
+        <br>
+
+        <input id="start_linux26" type="button" value="Linux 2.6 (Buildroot)">
+        <input id="start_linux3" type="button" value="Linux 3.18 (Buildroot)">
+        <input id="start_linux4" type="button" value="Linux 4.16 (Buildroot)">
+        <input id="start_buildroot" type="button" value="Linux 5.6 (Buildroot)">
+        <input id="start_tinycore" type="button" value="Tiny Core">
+        <input id="start_openwrt" type="button" value="OpenWRT">
+        <br>
+        <input id="start_archlinux" type="button" value="Arch Linux">
+        <input id="start_archlinux-boot" type="button" value="Arch Linux (boot)">
+        <input id="start_dsl" type="button" value="Damn Small Linux">
+        <br>
+
+        <input id="start_freebsd" type="button" value="FreeBSD">
+        <input id="start_freebsd-boot" type="button" value="FreeBSD (boot)">
+        <input id="start_openbsd" type="button" value="OpenBSD">
+        <input id="start_netbsd" type="button" value="NetBSD">
+        <br>
+
+        <input id="start_haiku" type="button" value="Haiku">
+        <input id="start_haiku-boot" type="button" value="Haiku (boot)">
+        <input id="start_minix" type="button" value="Minix">
+        <input id="start_serenity" type="button" value="SerenityOS">
+        <input id="start_qnx" type="button" value="QNX">
+        <input id="start_9front" type="button" value="9front">
+        <br>
+
+        <input id="start_oberon" type="button" value="Oberon">
+        <input id="start_kolibrios" type="button" value="KolibriOS">
+        <input id="start_solos" type="button" value="Solar OS">
+        <input id="start_bootchess" type="button" value="Bootchess">
+        <input id="start_helenos" type="button" value="HelenOS">
+        <br>
+
+        <!--
+        <hr>
+        Restore state: <input type="file" id="restore_state">
+        -->
+
+        <br>
+        <hr>
+
+        <table>
+            <tr>
+                <td width="350"><label for="cd_image">CD image</label></td>
+                <td>
+                    <input id="cd_image" type="file">
+                </td>
+            </tr>
+
+            <tr>
+                <td><label for="floppy_image">Floppy disk image</label></td>
+                <td><input id="floppy_image" type="file"><br></td>
+            </tr>
+
+            <tr>
+                <td><label for="hda_image">Hard disk image</label></td>
+                <td><input id="hda_image" type="file"><br></td>
+            </tr>
+
+            <tr>
+                <td>Second hard disk image</td>
+                <td><input id="hdb_image" type="file"><br></td>
+            </tr>
+
+            <tr>
+                <td><label for="multiboot_image">Multiboot kernel image (experimental)</label></td>
+                <td><input id="multiboot_image" type="file"><br></td>
+            </tr>
+
+            <tr>
+                <td><label for="bzimage">Kernel image (bzimage)</label></td>
+                <td><input id="bzimage" type="file"><br></td>
+            </tr>
+            <tr>
+                <td><label for="initrd">initrd</label></td>
+                <td><input id="initrd" type="file"><br></td>
+            </tr>
+
+            <tr>
+                <td colspan="2"><small>Disk images are not uploaded to the server</small>
+                    <hr>
+                </td>
+            </tr>
+
+            <tr>
+                <td><label for="memory_size">Memory size</label></td>
+                <td>
+                    <input id="memory_size" max="2048" min="16" step="16" type="number" value="128"> MB<br>
+                </td>
+            </tr>
+
+            <tr>
+                <td><label for="video_memory_size">Video Memory size</label></td>
+                <td>
+                    <input id="video_memory_size" max="128" min="1" step="1" type="number" value="8"> MB<br>
+                </td>
+            </tr>
+
+            <tr>
+                <td><label for="networking_proxy">Networking proxy (leave blank to disable)</label></td>
+                <td>
+                    <input id="networking_proxy" type="text" value="">
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="2">
+                    <hr>
+                </td>
+            </tr>
+
+            <tr>
+                <td><label for="disable_audio">Disable audio</label></td>
+                <td>
+                    <input id="disable_audio" type="checkbox"><br>
+                </td>
+            </tr>
+
+            <tr>
+                <td><label for="enable_acpi">Enable ACPI (experimental)</label></td>
+                <td>
+                    <input id="enable_acpi" type="checkbox"><br>
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="2">
+                    <hr>
+                </td>
+            </tr>
+
+            <tr>
+                <td><label for="boot_order">Boot order</label></td>
+                <td>
+                    <select id="boot_order">
+                        <option value="0">Auto</option>
+                        <option value="213">CD / Floppy / Hard Disk</option>
+                        <option value="123">CD / Hard Disk / Floppy</option>
+                        <option value="231">Floppy / CD / Hard Disk</option>
+                        <option value="321">Floppy / Hard Disk / CD</option>
+                        <option value="312">Hard Disk / Floppy / CD</option>
+                        <option value="132">Hard Disk / CD / Floppy</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+
+        <br>
+        <button id="start_emulation">Start Emulation</button>
+        <br>
+        <br>
+    </div>
+
+    <div id="runtime_options" style="display: none">
+        <input id="dump_regs" type="button" value="Dump Registers">
+        <input id="dump_gdt" type="button" value="Dump GDT/LDT">
+        <input id="dump_idt" type="button" value="Dump IDT">
+        <input id="dump_pt" type="button" value="Dump page tables">
+        <input id="dump_log" type="button" value="Dump log">
+        <br>
+
+        <input id="run" type="button" value="Pause">
+        <input id="reset" type="button" value="Reset">
+        <input id="exit" type="button" value="Exit">
+        <input id="ctrlaltdel" type="button" value="Send Ctrl-Alt-Del">
+        <input id="alttab" type="button" value="Send Alt-Tab">
+        <input id="get_fda_image" type="button" value="Get floppy image">
+        <input id="get_fdb_image" type="button" value="Get second floppy image">
+        <input id="get_hda_image" type="button" value="Get hard disk image">
+        <input id="get_hdb_image" type="button" value="Get second hard disk image">
+        <input id="get_cdrom_image" type="button" value="Get CD-ROM image">
+        <input id="change_fda_image" type="button" value="Insert floppy image">
+        <input id="save_state" type="button" value="Save State">
+        <input id="load_state" type="button" value="Load State"> <input id="load_state_input" style="display: none" type="file">
+        <input id="memory_dump" type="button" value="Memory Dump">
+        <input id="capture_network_traffic" type="button" value="Capture network traffic">
+        <input id="toggle_mouse" type="button" value="Disable mouse">
+        <input id="lock_mouse" type="button" value="Lock mouse">
+        <input id="fullscreen" type="button" value="Go fullscreen">
+        <input id="take_screenshot" type="button" value="Take screenshot">
+        <input id="mute" type="button" value="Mute">
+
+        <label>
+            Scale:
+            <input id="scale" min="0.25" step="0.25" style="width: 50px" type="number" value="1.0">
+        </label>
+
+        <br>
+    </div>
+
+    <pre id="log_levels" style="margin: 0"></pre>
+    <pre id="loading" style="display: none"></pre>
+    <br>
+</div>
+
+<div id="screen_container" style="display: none">
+    <div id="screen"></div>
+    <canvas id="vga"></canvas>
+
+    <div style="position: absolute; top: 0; z-index: 10">
+        <textarea class="phone_keyboard"></textarea>
+    </div>
+</div>
+
+
+<div id="runtime_infos" style="display: none">
+    Running: <span id="running_time">0s</span> <br>
+    Speed: <span id="speed">0</span> mIPS<br>
+    Avg speed: <span id="avg_speed">0</span> mIPS<br>
+    <br>
+    <div id="info_storage" style="display: none">
+        <b>IDE device<span id="ide_type"></span></b><br>
+        Sectors read: <span id="info_storage_sectors_read">0</span><br>
+        Bytes read: <span id="info_storage_bytes_read">0</span><br>
+        Sectors written: <span id="info_storage_sectors_written">0</span><br>
+        Bytes written: <span id="info_storage_bytes_written">0</span><br>
+        Status: <span id="info_storage_status"></span><br>
+        <br>
+    </div>
+    <div id="info_filesystem" style="display: none">
+        <b>9p Filesystem</b><br>
+        Bytes read: <span id="info_filesystem_bytes_read">0</span><br>
+        Bytes written: <span id="info_filesystem_bytes_written">0</span><br>
+        <div style="white-space: nowrap; overflow-x: hidden">Last file: <span id="info_filesystem_last_file"></span></div>
+        Status: <span id="info_filesystem_status"></span><br>
+        <br>
+    </div>
+    <div id="info_network" style="display: none">
+        <b>Network</b><br>
+        Bytes received: <span id="info_network_bytes_received">0</span><br>
+        Bytes transmitted: <span id="info_network_bytes_transmitted">0</span><br>
+        <br>
+    </div>
+    <b>VGA</b><br>
+    Mode: <span id="info_vga_mode"></span><br>
+    Resolution: <span id="info_res">-</span><br>
+    BPP: <span id="info_bpp">-</span><br>
+    <br>
+    Mouse: <span id="info_mouse_enabled">No</span><br>
+</div>
+
+<div id="filesystem_panel" style="display: none">
+    <label>
+        Send files to emulator<br>
+        <input id="filesystem_send_file" multiple type="file">
+    </label>
+    <br><br>
+    <label>
+        Get file from emulator<br>
+        <input id="filesystem_get_file" placeholder="Absolute path" type="text">
+    </label>
+</div>
+
+<div id="debug_panel" style="display: none">
+</div>
+
+<br style="clear: both"><br>
+
+<textarea cols="40" id="serial" rows="12" spellcheck="false" style="display: none">
+</textarea>
+
+<div id="terminal"></div>
