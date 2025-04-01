@@ -19,8 +19,17 @@
             bottom: 10px;
             width: 100%;
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
             pointer-events: none;
+        }
+
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            width: 160px;
+            height: 160px;
+            position: relative;
+            pointer-events: auto;
         }
 
         .btn {
@@ -34,22 +43,21 @@
             font-size: 20px;
             color: white;
             font-weight: bold;
-            pointer-events: auto;
+            position: absolute;
             touch-action: manipulation;
         }
 
-        #left, #right {
-            position: absolute;
-            bottom: 50px;
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            font-size: 24px;
-        }
+        /* Arrow keys layout */
+        #up { left: 50px; top: 0; }
+        #down { left: 50px; bottom: 0; }
+        #left { left: 0; top: 50px; }
+        #right { right: 0; top: 50px; }
 
-        #left { left: 20px; }
-        #right { left: 120px; }
+        /* WASD Layout */
+        #w { left: 50px; top: 0; }
+        #s { left: 50px; bottom: 0; }
+        #a { left: 0; top: 50px; }
+        #d { right: 0; top: 50px; }
     </style>
 </head>
 <body>
@@ -58,11 +66,21 @@
 
 <!-- Touch Controls -->
 <div id="touch-controls">
-    <div id="left" class="btn" data-key="ArrowLeft">←</div>
-    <div id="right" class="btn" data-key="ArrowRight">→</div>
-    <div class="btn" data-key="D">D</div>
-    <div class="btn" data-key="A">A</div>
-    <div class="btn" data-key="W">W</div>
+    <!-- Left Side: Arrow Keys -->
+    <div class="control-group" style="left: 10px;">
+        <div id="up" class="btn" data-key="ArrowUp">↑</div>
+        <div id="down" class="btn" data-key="ArrowDown">↓</div>
+        <div id="left" class="btn" data-key="ArrowLeft">←</div>
+        <div id="right" class="btn" data-key="ArrowRight">→</div>
+    </div>
+
+    <!-- Right Side: WASD -->
+    <div class="control-group" style="right: 10px;">
+        <div id="w" class="btn" data-key="W">W</div>
+        <div id="s" class="btn" data-key="S">S</div>
+        <div id="a" class="btn" data-key="A">A</div>
+        <div id="d" class="btn" data-key="D">D</div>
+    </div>
 </div>
 
 <script>
