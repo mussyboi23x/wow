@@ -4,22 +4,26 @@
     <title>Rocket Soccer</title>
     <link href="../../images/ico.ico" rel="shortcut icon">
     <script src="../../storage/js/cloak.js"></script>
-    
+
     <meta charset="utf-8">
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
     <meta content="noindex, nofollow" name="robots">
-    
+
     <script>
         window.config = {
             loader: 'unity',
             debug: false,
             maxRatio: 16 / 9,
             minRatio: 9 / 16,
+
             title: 'Rocket League',
+
             thumbnail: 'RocketSoccer.jpg',
             numScreenshots: 4,
+
             unityWebglBuildUrl: 'build.json',
             unityWebglLoaderUrl: 'UnityLoader.js',
+
             fileSize: 27,
             loadingComments: ['Loading...'],
             cachedDecompressedFileSizes: {
@@ -29,58 +33,88 @@
             },
         };
     </script>
+
     <style>
-        .joystick {
+        /* Ensure Unity WebGL fills the screen */
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* Joystick Styling */
+        #joystick-container {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            display: grid;
-            grid-template-columns: 50px 50px 50px;
-            grid-template-rows: 50px 50px;
-            gap: 5px;
+            bottom: 10%;
+            left: 10%;
+            width: 120px;
+            height: 120px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999; /* Keeps joystick on top */
+            touch-action: none;
         }
-        .joystick button {
-            width: 50px;
-            height: 50px;
-            font-size: 20px;
-            text-align: center;
-            border-radius: 10px;
-            background: #666;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        .joystick button:active {
-            background: #444;
+
+        #joystick {
+            width: 60px;
+            height: 60px;
+            background: white;
+            border-radius: 50%;
+            position: relative;
         }
     </style>
 </head>
 <body>
     <script src="master-loader.js"></script>
-    
-    <div class="joystick">
-        <button id="W">W</button>
-        <button id="A">A</button>
-        <button id="D">D</button>
-        <button id="S">S</button>
+
+    <!-- Joystick (always on top) -->
+    <div id="joystick-container">
+        <div id="joystick"></div>
     </div>
-    
+
     <script>
-        function simulateKeyPress(key, type) {
-            document.dispatchEvent(new KeyboardEvent(type, { key: key }));
+        const joystick = document.getElementById("joystick");
+        const joystickContainer = document.getElementById("joystick-container");
+
+        let isDragging = false;
+
+        joystick.addEventListener("touchstart", (event) => {
+            isDragging = true;
+            event.preventDefault(); // Prevent Unity from capturing input
+        });
+
+        document.addEventListener("touchmove", (event) => {
+            if (!isDragging) return;
+
+            const touch = event.touches[0];
+            const rect = joystickContainer.getBoundingClientRect();
+            const x = touch.clientX - rect.left - rect.width / 2;
+            const y = touch.clientY - rect.top - rect.height / 2;
+
+            if (y < -20) sendKeyPress("w"); // Forward
+            if (y > 20) sendKeyPress("s");  // Backward
+            if (x < -20) sendKeyPress("a"); // Left
+            if (x > 20) sendKeyPress("d");  // Right
+        });
+
+        document.addEventListener("touchend", () => {
+            isDragging = false;
+            sendKeyRelease("w");
+            sendKeyRelease("a");
+            sendKeyRelease("s");
+            sendKeyRelease("d");
+        });
+
+        function sendKeyPress(key) {
+            document.dispatchEvent(new KeyboardEvent("keydown", { key: key }));
         }
-        
-        document.getElementById("W").addEventListener("mousedown", () => simulateKeyPress("w", "keydown"));
-        document.getElementById("W").addEventListener("mouseup", () => simulateKeyPress("w", "keyup"));
-        
-        document.getElementById("A").addEventListener("mousedown", () => simulateKeyPress("a", "keydown"));
-        document.getElementById("A").addEventListener("mouseup", () => simulateKeyPress("a", "keyup"));
-        
-        document.getElementById("S").addEventListener("mousedown", () => simulateKeyPress("s", "keydown"));
-        document.getElementById("S").addEventListener("mouseup", () => simulateKeyPress("s", "keyup"));
-        
-        document.getElementById("D").addEventListener("mousedown", () => simulateKeyPress("d", "keydown"));
-        document.getElementById("D").addEventListener("mouseup", () => simulateKeyPress("d", "keyup"));
+
+        function sendKeyRelease(key) {
+            document.dispatchEvent(new KeyboardEvent("keyup", { key: key }));
+        }
     </script>
+
 </body>
 </html>
